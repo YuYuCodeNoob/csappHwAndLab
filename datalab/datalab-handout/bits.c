@@ -143,7 +143,7 @@ NOTES:
  *   Rating: 1
  */
 int bitXor(int x, int y) {
-  return (x & ~y) | (y & ~x);
+  return ~((~(x & ~y)) & (~(y & ~x)));
 }
 /* 
  * tmin - return minimum two's complement integer 
@@ -153,7 +153,7 @@ int bitXor(int x, int y) {
  */
 int tmin(void) {
 
-  return -1<<31;
+  return (~0x1 + 1)<<31;
 
 }
 //2
@@ -165,7 +165,7 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-  return !(x ^ 0x7fffffff);
+  return (!((~(x + 1)) ^ x)) & (!!((x+1) ^ 0));
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -176,7 +176,11 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int allOddBits(int x) {
-  return !(x ^ 0xAAAAAAAA);
+  int mask = 0xA;
+  mask += mask << 4;
+  mask += mask << 8;
+  mask += mask << 16;
+  return !((x & mask) ^ mask);
 }
 /* 
  * negate - return -x 
@@ -219,7 +223,17 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return ((x + ~y + 1) >> 31) | (!((x + ~y + 1) ^ 0 ));
+  int equal = !(x ^ y);
+  int signX = (x >> 31) & 1;
+  int signY = (y >> 31) & 1;
+  // x + y - > cond2 = 1 x + y + -> cond2 = 1
+  int cond2 = !((!signX) & signY);
+  // x - y + less = 1
+  int less = signX & (!signY);
+  // x - y < 0
+  int neg = ((x + (~y) + 1) >> 31) & 0x1;
+  return equal | (cond2 & (less | neg));
+
 }
 //4
 /* 
