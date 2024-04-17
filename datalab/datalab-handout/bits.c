@@ -213,7 +213,16 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-  return 2;
+  // if x == 0 logicalX = 0 else logicalX = 1
+  int logicalX = !!x;
+  // turn mask into 0xffffffff if logicalX == 1 else 0x0
+  int mask = logicalX;
+  mask |= mask << 1;
+  mask |= mask << 2;
+  mask |= mask << 4;
+  mask |= mask << 8;
+  mask |= mask << 16;
+  return (mask & y) | ((~mask) & z);
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
@@ -223,16 +232,14 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  int equal = !(x ^ y);
+  // if signX == signY don't care about int overflow
   int signX = (x >> 31) & 1;
   int signY = (y >> 31) & 1;
-  // x + y - > cond2 = 1 x + y + -> cond2 = 1
-  int cond2 = !((!signX) & signY);
-  // x - y + less = 1
-  int less = signX & (!signY);
-  // x - y < 0
-  int neg = ((x + (~y) + 1) >> 31) & 0x1;
-  return equal | (cond2 & (less | neg));
+  int signEqual = !(signX ^ signY);
+  int diff = y + (~x) + 1;
+  // if y >= x signDiff = 0
+  int signDiff = (diff >> 31) & 1;
+  return ((signEqual) & (!signDiff)) | ((!signEqual) & signX);
 
 }
 //4
