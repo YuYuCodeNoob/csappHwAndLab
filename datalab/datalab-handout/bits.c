@@ -216,12 +216,7 @@ int conditional(int x, int y, int z) {
   // if x == 0 logicalX = 0 else logicalX = 1
   int logicalX = !!x;
   // turn mask into 0xffffffff if logicalX == 1 else 0x0
-  int mask = logicalX;
-  mask |= mask << 1;
-  mask |= mask << 2;
-  mask |= mask << 4;
-  mask |= mask << 8;
-  mask |= mask << 16;
+  int mask = (logicalX << 31)>>31;
   return (mask & y) | ((~mask) & z);
 }
 /* 
@@ -252,7 +247,9 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-  return 2;
+  int negX = ~x + 1;
+  int sign = (negX | x) >> 31;
+  return sign + 1;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -267,7 +264,24 @@ int logicalNeg(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-  return 0;
+  int isZero = !x;
+  int sign = x >>  31;
+  int mask = ((!!x) << 31)>>31;
+  x = ((~sign) & x) | (sign & (~x));
+  int bit_16,bit_8,bit_4,bit_2,bit_1,bit_0;
+  bit_16 = (!((!(x >> 16)) ^ 0)) << 4;
+  x >>= bit_16;
+  bit_8 = (!((!(x >> 8)) ^ 0)) << 3;
+  x >>= bit_8;
+  bit_4 = (!((!(x >> 4)) ^ 0)) << 2;
+  x >>= bit_4;
+  bit_2 = (!((!(x >> 2)) ^ 0)) << 1;
+  x >>= bit_2;
+  bit_1 = (!((!(x >> 1)) ^ 0));
+  x >>= bit_1;
+  bit_0 = x;
+  int res = 1 +bit_16 + bit_8 + bit_4 + bit_2 + bit_1 + bit_0;
+  return isZero | (mask & res);
 }
 //float
 /* 
