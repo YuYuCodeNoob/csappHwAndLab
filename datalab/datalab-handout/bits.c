@@ -296,7 +296,27 @@ int howManyBits(int x) {
  *   Rating: 4
  */
 unsigned floatScale2(unsigned uf) {
-  return 2;
+  unsigned sign = (uf >> 31) & (0x1);
+  unsigned expr = (uf >> 23) & (0xff);
+  unsigned frac = uf & (0x7fffff);
+  if (expr == 0 && frac == 0)
+  {
+   return uf;
+  }
+  if (expr == 0xff){
+    // if frac == 0 INF else if frac !=0 Not a number
+    return uf;
+  }
+  if(expr == 0){
+    //  E = expr - 127 frac = frac * 2;
+    frac <<= 1;
+    return (sign << 31) | frac;
+  }
+  if (expr)
+  {
+    expr ++;
+    return (sign << 31) | (expr << 23) | frac;
+  }
 }
 /* 
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -311,7 +331,48 @@ unsigned floatScale2(unsigned uf) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-  return 2;
+  unsigned sign = (uf >> 31) & (0x1);
+  unsigned expr = (uf >> 23) & (0xff);
+  unsigned frac = uf & (0x7fffff);
+  if (expr == 0 && expr == 0)
+  {
+    return 0;
+  }
+  // NAN INF
+  if(expr == 0xff){
+    return 0x80000000u;
+  }
+  if (expr == 0)
+  {
+    return 0;
+  }
+  // 规格化
+  int E = expr - 127;
+  frac = frac | (1 << 23);
+  if (E > 31)
+  {
+    return 0x80000000u;
+  }
+  else if (E < 0)
+  {
+    return 0;
+  }
+  
+  if (E >= 23)
+  {
+    frac <<= (E - 23);
+  }else{
+    frac >>= (23 - E);
+  }
+   if (!sign)
+    {
+      return frac;
+    }
+    else{
+      return ~frac + 1;
+    }
+  
+  
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -327,5 +388,17 @@ int floatFloat2Int(unsigned uf) {
  *   Rating: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+    if(x < -149){
+      return 0;
+    }else if ( x < -126)
+    {
+      // 非规格化;
+      return 1 << (x + 149);
+    }else if (x <= 127)
+    {
+      int expr = x + 127;
+      return expr << 23;
+    }else{
+        return 0xff << 23;
+    }    
 }
