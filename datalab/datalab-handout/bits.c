@@ -334,7 +334,7 @@ int floatFloat2Int(unsigned uf) {
   unsigned sign = (uf >> 31) & (0x1);
   unsigned expr = (uf >> 23) & (0xff);
   unsigned frac = uf & (0x7fffff);
-  if (expr == 0 && expr == 0)
+  if (expr == 0 && frac == 0)
   {
     return 0;
   }
